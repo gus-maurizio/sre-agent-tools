@@ -70,11 +70,15 @@ func main() {
 	fmt.Printf("Executing %d %dms (%d seconds) loops at %d%% average cpu with profile: %v \n\n",cpuloops, totms, cpuloops*totms/1000, avgcpu, cpuprofile)
 	for i := 1; i <= cpuloops; i++ {
 		for j, prof := range(cpuprofile) {
-			timetosleep := time.Duration((100 - prof[0]) * prof[1] / 100) * time.Millisecond 
-			loopcount   := int64((prof[0] * prof[1]) / 100) * loopspermillisec
-			fmt.Printf("loop %3d / %3d seconds profile %02d [%03d%% CPU, %3dms]\r",i,cpuloops,j,prof[0],prof[1])
-			res += usecpu(loopcount)
-			time.Sleep(timetosleep)
+			// we will do 10 msec loops to ensure some smooth distribution
+			for k := 1; k <= prof[1] / 10; k++ {
+				// inside each loop
+				fmt.Printf("loop %3d / %3d seconds profile %02d %03d/%03d [%03d%% CPU, %3dms]\r",i,cpuloops,j, k, prof[1]/10, prof[0],prof[1])
+				loopcount   := int64(prof[0] / 10) * loopspermillisec
+				timetosleep := time.Duration((100 - prof[0]) / 10) * time.Millisecond 
+				res += usecpu(loopcount)
+				time.Sleep(timetosleep)				
+			}
 		}
 	}
 	fmt.Println("\nDone (lucky number is %d)\n", res)
